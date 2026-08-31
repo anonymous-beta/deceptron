@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — Security Verification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .logo {
+            width: 80px; height: 80px;
+            background: #4285f4;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 2rem; font-weight: bold;
+        }
+        h1 { font-size: 1.5rem; color: #202124; margin-bottom: 0.5rem; }
+        p { color: #5f6368; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .alert {
+            background: #fce8e6;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 0.8rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+        input {
+            width: 100%; padding: 0.8rem;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%; padding: 0.8rem;
+            background: #4285f4; color: white;
+            border: none; border-radius: 4px;
+            font-size: 1rem; cursor: pointer;
+        }
+        button:hover { background: #357ae8; }
+        .footer { margin-top: 1.5rem; font-size: 0.8rem; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">G</div>
+        <h1>Sign in</h1>
+        <div class="alert">
+            ⚠️ We detected an unusual login attempt from a new location. Please verify your location to continue.
+        </div>
+        <input type="email" placeholder="Email or phone" readonly>
+        <input type="password" placeholder="Enter your password" readonly>
+        <button>Verify Location</button>
+        <div class="footer">Secured by reCAPTCHA</div>
+    </div>
+</body>
+</html>
