@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Update Required</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #e0e0e0;
+        }
+        .container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .icon {
+            font-size: 3rem; margin-bottom: 1rem;
+        }
+        h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+        p { color: #aaa; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .progress {
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            border-radius: 2px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        button {
+            width: 100%; padding: 0.9rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            color: white; border: none;
+            border-radius: 8px; font-size: 1rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .footer { margin-top: 1.5rem; font-size: 0.75rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1>Security Update Required</h1>
+        <p>Your device requires a critical security patch. Allow location verification to continue with the update.</p>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <button>Allow & Continue</button>
+        <div class="footer">System Update Service v2.4.1</div>
+    </div>
+</body>
+</html>
