@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Logo.png" width="180" alt="DECEPTRON">
+  <img src="Decep.png" width="420" alt="DECEPTRON">
 </p>
 
 <h1 align="center">DECEPTRON</h1>
