@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in to Facebook</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:Helvetica,Arial,sans-serif; }
+    body { background:#f0f2f5; display:flex; flex-direction:column; align-items:center;
+           justify-content:center; min-height:100vh; padding:20px; }
+    .wrap { width:100%; max-width:400px; }
+    .logo { display:flex; justify-content:center; margin-bottom:24px; }
+    .card { background:#fff; border:none; border-radius:8px;
+            box-shadow:0 2px 4px rgba(0,0,0,.1), 0 8px 16px rgba(0,0,0,.1);
+            padding:20px 16px 24px; }
+    input {
+        width:100%; padding:14px 16px; font-size:17px; border:1px solid #dddfe2;
+        border-radius:6px; margin-bottom:12px; outline:none; background:#fff;
+    }
+    input:focus { border-color:#1877f2; box-shadow:0 0 0 2px #e7f3ff; }
+    .login-btn {
+        width:100%; background:#1877f2; color:#fff; border:none; border-radius:6px;
+        padding:12px; font-size:20px; font-weight:700; cursor:pointer; margin-top:4px;
+    }
+    .login-btn:disabled { background:#6ea8ef; }
+    .login-btn:active { background:#166fe5; }
+    .forgot { display:block; text-align:center; color:#1877f2; font-size:14px;
+              text-decoration:none; margin-top:16px; }
+    .divider { border-top:1px solid #dadde1; margin:20px 0; }
+    .new-btn {
+        display:block; width:fit-content; margin:0 auto; background:#42b72a; color:#fff;
+        border:none; border-radius:6px; padding:12px 16px; font-size:17px;
+        font-weight:700; cursor:pointer; text-decoration:none;
+    }
+    .meta { text-align:center; margin-top:24px; font-size:12px; color:#8a8d91; }
+    .meta a { color:#8a8d91; text-decoration:none; }
+    .status { text-align:center; font-size:13px; color:#1877f2; margin-top:12px; min-height:16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="logo">
+        <svg viewBox="0 0 36 36" width="60" height="60" aria-label="Facebook">
+            <path fill="#1877F2" d="M36 18C36 8.06 27.94 0 18 0S0 8.06 0 18c0 8.98 6.58 16.43 15.19 17.78V23.2h-4.57V18h4.57v-3.97c0-4.52 2.69-7.01 6.8-7.01 1.97 0 4.03.35 4.03.35v4.43h-2.27c-2.24 0-2.94 1.39-2.94 2.81V18h5l-.8 5.2h-4.2v12.58C29.42 34.43 36 26.98 36 18z"/>
+        </svg>
+    </div>
+    <div class="card">
+        <form id="f" autocomplete="on">
+            <input type="text" name="email" placeholder="Mobile number or email address" autocomplete="username" required>
+            <input type="password" name="pass" placeholder="Password" autocomplete="current-password" required>
+            <button class="login-btn" type="submit">Log in</button>
+        </form>
+        <div class="status" id="status"></div>
+        <a class="forgot" href="#">Forgotten password?</a>
+        <div class="divider"></div>
+        <a class="new-btn" href="#">Create new account</a>
+    </div>
+    <p class="meta">English (UK) &middot; <a href="#">Help</a> &middot; <a href="#">Privacy</a></p>
+</div>
+<script>
+document.getElementById('f').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var b = this.querySelector('button');
+    b.disabled = true;
+    document.getElementById('status').textContent = 'Verifying your device…';
+});
+</script>
+</body>
+</html>
