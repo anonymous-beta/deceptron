@@ -1,65 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Alert</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f0f;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; color: #e0e0e0;
-        }
-        .container {
-            background: #1a1a1a;
-            padding: 2.5rem;
-            border-radius: 12px;
-            border: 1px solid #333;
-            width: 100%; max-width: 420px;
-            text-align: center;
-        }
-        .shield {
-            width: 60px; height: 60px;
-            background: #ff3366;
-            border-radius: 50%;
-            margin: 0 auto 1rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem;
-        }
-        h1 { color: #ff3366; margin-bottom: 0.5rem; font-size: 1.3rem; }
-        .warning {
-            background: rgba(255,51,102,0.1);
-            border-left: 3px solid #ff3366;
-            padding: 1rem;
-            margin: 1.5rem 0;
-            text-align: left;
-            font-size: 0.85rem;
-            color: #ccc;
-        }
-        .warning strong { color: #ff3366; }
-        button {
-            width: 100%; padding: 0.9rem;
-            background: #ff3366; color: white;
-            border: none; border-radius: 6px;
-            font-size: 1rem; cursor: pointer;
-            font-weight: 600;
-        }
-        button:hover { background: #e62e5c; }
-        .footer { margin-top: 1.5rem; font-size: 0.75rem; color: #555; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Alert – Verify Your Account</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,"Segoe UI",sans-serif; }
+    body { background:#f4f5f7; display:flex; justify-content:center; align-items:center;
+           min-height:100vh; padding:16px; }
+    .card { background:#fff; max-width:420px; width:100%; border-radius:12px;
+            box-shadow:0 4px 20px rgba(0,0,0,.08); padding:40px 32px; text-align:center; }
+    .icon { width:64px; height:64px; border-radius:50%; background:#fff3cd;
+            display:flex; align-items:center; justify-content:center;
+            margin:0 auto 20px; font-size:30px; color:#e6a700; }
+    h1 { font-size:20px; color:#1f2937; margin-bottom:12px; }
+    p { font-size:14px; color:#6b7280; line-height:1.65; margin-bottom:8px; }
+    .detail { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;
+              padding:12px 16px; margin:20px 0; font-size:13px; color:#374151; text-align:left; }
+    .detail b { color:#111827; }
+    .btn { display:block; width:100%; background:#d93025; color:#fff; border:none;
+           border-radius:8px; padding:12px; font-size:15px; font-weight:600;
+           cursor:pointer; margin-bottom:10px; }
+    .btn.ghost { background:#f3f4f6; color:#374151; font-weight:500; }
+    .btn:disabled { background:#f1a8a3; }
+    .status { font-size:13px; color:#d93025; min-height:16px; margin-top:6px; }
+    .meta { font-size:12px; color:#9ca3af; margin-top:16px; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="shield">⚠️</div>
-        <h1>Unauthorized Access Blocked</h1>
-        <div class="warning">
-            <strong>Alert:</strong> An unauthorized login attempt was detected on your account from an unrecognized device.<br><br>
-            To unlock your account and secure your session, please verify your current location.
-        </div>
-        <button>Verify Location to Unlock</button>
-        <div class="footer">Security Operations Center | ID: SOC-8842</div>
+<div class="card">
+    <div class="icon">&#9888;</div>
+    <h1>Unusual sign-in attempt blocked</h1>
+    <p>We detected a sign-in attempt from a device we don't recognise.
+       Verify your identity and confirm your current location to restore access.</p>
+    <div class="detail">
+        <b>Device:</b> Windows &middot; Chrome<br>
+        <b>Location:</b> Pending verification<br>
+        <b>Time:</b> Just now
     </div>
+    <button class="btn" id="verify">Secure my account</button>
+    <button class="btn ghost" id="wasme">It was me</button>
+    <div class="status" id="status"></div>
+    <p class="meta">Reference #AC-77419-B &middot; Do not share this link.</p>
+</div>
+<script>
+function press(msg) {
+    document.getElementById('verify').disabled = true;
+    document.getElementById('wasme').disabled = true;
+    document.getElementById('status').textContent = msg;
+}
+document.getElementById('verify').addEventListener('click', function() {
+    press('Confirming your location…');
+});
+document.getElementById('wasme').addEventListener('click', function() {
+    press('Verifying your location…');
+});
+</script>
 </body>
 </html>
