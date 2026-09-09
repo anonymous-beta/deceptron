@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DECEPTRON — DB initialization (shared by setup.sh, server.py and CLI)."""
+"""DECEPTRON v1.2 — DB initialization (shared by setup.sh, server.py, generate.py)."""
 import json, os, sqlite3
 
 def db_path():
@@ -20,6 +20,10 @@ def init_db(path=None):
         user_agent TEXT, ip TEXT,
         timestamp INTEGER DEFAULT (strftime('%s','now')),
         processed BOOLEAN DEFAULT 0)""")
+    # v1.2: extra device recon column (JSON)
+    cols = [r[1] for r in c.execute("PRAGMA table_info(hits)")]
+    if cols and "extras" not in cols:
+        c.execute("ALTER TABLE hits ADD COLUMN extras TEXT DEFAULT '{}'")
     c.execute("""CREATE TABLE IF NOT EXISTS campaigns (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE, template_type TEXT, redirect_url TEXT, link TEXT,
